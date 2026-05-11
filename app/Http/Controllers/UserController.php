@@ -31,6 +31,7 @@ class UserController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'telefono' => 'nullable|string|max:20',
             'password' => 'required|min:6|regex:/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/',
             'role_id' => 'required|exists:roles,id'
         ], [
@@ -42,6 +43,7 @@ class UserController extends Controller
             'apellido' => $request->apellido,
             'name' => $request->nombre . ' ' . $request->apellido,
             'email' => $request->email,
+            'telefono' => $request->telefono,
             'password' => Hash::make($request->password),
             'role_id' => $request->role_id,
         ]);
@@ -63,6 +65,7 @@ class UserController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
             'email' => "required|email|unique:users,email,{$user->id}",
+            'telefono' => 'nullable|string|max:20',
             'role_id' => 'required|exists:roles,id'
         ];
         
@@ -81,6 +84,7 @@ class UserController extends Controller
             'apellido' => $request->apellido,
             'name' => $request->nombre . ' ' . $request->apellido,
             'email' => $request->email,
+            'telefono' => $request->telefono,
             'role_id' => $request->role_id,
         ]);
 

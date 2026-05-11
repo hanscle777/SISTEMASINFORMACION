@@ -22,7 +22,7 @@
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100">
                     <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nombre Completo</th>
-                    <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email</th>
+                    <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contacto</th>
                     <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Rol</th>
                     <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Registrado</th>
                     <th class="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Acciones</th>
@@ -33,7 +33,12 @@
                 <tr class="hover:bg-gray-50/50 transition">
                     <td class="px-6 py-4">
                         <p class="text-sm font-bold text-gray-800">{{ $u->nombre }} {{ $u->apellido }}</p>
-                        <p class="text-[10px] text-gray-400">{{ $u->email }}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-xs font-semibold text-gray-600">{{ $u->email }}</p>
+                        @if($u->telefono)
+                            <p class="text-[10px] text-gray-400"><i class="fas fa-phone mr-1"></i>{{ $u->telefono }}</p>
+                        @endif
                     </td>
                     <td class="px-6 py-4 text-center">
                         <span class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider

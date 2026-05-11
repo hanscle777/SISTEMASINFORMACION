@@ -49,6 +49,17 @@
                 </div>
 
                 <div>
+                    <label for="telefono" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Número de Teléfono</label>
+                    <div class="relative">
+                        <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" name="telefono" id="telefono" value="{{ old('telefono') }}"
+                            class="w-full pl-12 pr-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition duration-200 shadow-sm"
+                            placeholder="+591 70000000">
+                    </div>
+                    @error('telefono') <p class="text-red-500 text-xs mt-2 font-bold">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label for="password" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Contraseña</label>
                     <div class="relative">
                         <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
