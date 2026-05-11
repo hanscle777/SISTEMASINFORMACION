@@ -8,6 +8,9 @@
             <h2 class="text-3xl font-extrabold text-gray-800 tracking-tight">Directorio de Clientes</h2>
             <p class="text-gray-500 font-medium">Encuentra a tus clientes rápidamente.</p>
         </div>
+        <a href="{{ route('clientes.create') }}" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-rose-200 transition-all flex items-center gap-2">
+            <i class="fas fa-plus"></i> Registrar Cliente
+        </a>
     </div>
 @endsection
 
@@ -43,10 +46,20 @@
                 <p class="text-xs font-medium text-gray-500 mb-4 truncate w-full" title="{{ $cliente->email }}">{{ $cliente->email }}</p>
                 
                 <div class="w-full flex justify-center space-x-2 border-t border-gray-50 pt-4 mt-2">
-                    <button class="w-full py-2.5 bg-gray-50 hover:bg-rose-50 text-gray-600 hover:text-rose-600 rounded-xl font-bold text-xs transition-colors flex items-center justify-center space-x-2" onclick="alert('Función de agendar cita en desarrollo...')">
+                    <a href="{{ route('citas.create', ['cliente_id' => $cliente->id]) }}" class="flex-1 py-2.5 bg-gray-50 hover:bg-rose-50 text-gray-600 hover:text-rose-600 rounded-xl font-bold text-xs transition-colors flex items-center justify-center space-x-2">
                         <i class="fas fa-calendar-plus"></i>
                         <span>Agendar Cita</span>
-                    </button>
+                    </a>
+                    <a href="{{ route('clientes.edit', $cliente->id) }}" class="p-2.5 bg-gray-50 hover:bg-amber-50 text-gray-600 hover:text-amber-600 rounded-xl transition-colors" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ route('clientes.destroy', $cliente->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de eliminar este cliente?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="p-2.5 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-xl transition-colors" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

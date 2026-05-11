@@ -85,8 +85,9 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('servicios', \App\Http\Controllers\ServicioController::class);
     });
 
-    // Clientes (CU11)
+    // Clientes y Citas (CU9, CU10, CU11, CU12, CU19)
     Route::middleware(['permission:manage_appointments'])->group(function () {
-        Route::get('clientes', [\App\Http\Controllers\ClienteController::class, 'index'])->name('clientes.index');
+        Route::resource('clientes', \App\Http\Controllers\ClienteController::class);
+        Route::resource('citas', \App\Http\Controllers\CitaController::class);
     });
 });
