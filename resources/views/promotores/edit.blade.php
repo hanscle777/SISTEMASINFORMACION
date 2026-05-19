@@ -40,6 +40,14 @@
                     @error('telefono') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
+                <div class="space-y-2">
+                    <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Correo Electrónico</label>
+                    <input type="email" name="email" value="{{ old('email', $promotor->email) }}"
+                        class="w-full bg-rose-50/30 border border-rose-100 rounded-2xl p-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
+                        placeholder="Ej. contacto@empresa.com">
+                    @error('email') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-xs font-black text-rose-400 uppercase tracking-widest px-1">Notas Adicionales</label>
                     <textarea name="notas" rows="4"

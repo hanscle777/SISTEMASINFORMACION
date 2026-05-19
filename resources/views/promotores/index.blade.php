@@ -47,8 +47,11 @@
                         </span>
                     </td>
                     <td class="p-5">
-                        <div class="flex flex-col">
+                        <div class="flex flex-col gap-1">
                             <span class="text-sm font-medium text-gray-700"><i class="fas fa-phone text-rose-300 mr-2 text-xs"></i>{{ $promotor->telefono ?? 'N/A' }}</span>
+                            @if($promotor->email)
+                            <span class="text-sm font-medium text-gray-700"><i class="fas fa-envelope text-rose-300 mr-2 text-xs"></i>{{ $promotor->email }}</span>
+                            @endif
                         </div>
                     </td>
                     <td class="p-5 text-right">

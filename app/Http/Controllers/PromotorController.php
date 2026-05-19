@@ -27,6 +27,7 @@ class PromotorController extends Controller
             'telefono' => 'nullable|string|max:20',
             'empresa' => 'nullable|string|max:255',
             'notas' => 'nullable|string',
+         
         ]);
 
         Promotor::create($request->all());
@@ -49,6 +50,7 @@ class PromotorController extends Controller
             'telefono' => 'nullable|string|max:20',
             'empresa' => 'nullable|string|max:255',
             'notas' => 'nullable|string',
+        
         ]);
 
         $oldData = $promotore->toArray();

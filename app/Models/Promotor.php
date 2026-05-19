@@ -14,6 +14,7 @@ class Promotor extends Model
     protected $fillable = [
         'nombre',
         'telefono',
+        'email',
         'empresa',
         'notas',
     ];

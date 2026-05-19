@@ -29,7 +29,7 @@ class ProductoController extends Controller
                 $query->whereColumn('stock', '<=', 'stock_minimo');
             } elseif ($request->stock_status == 'bajo') {
                 $query->whereColumn('stock', '>', 'stock_minimo')
-                      ->where('stock', '<=', \DB::raw('stock_minimo + 5'));
+                      ->where('stock', '<=', DB::raw('stock_minimo + 5'));
             }
         }
 
