@@ -453,7 +453,7 @@ class TestDataSeeder extends Seeder
         }
 
         // 10. Crear Alertas de Stock Bajo
-        Alerta::truncate(); // Limpiar antiguas
+        Alerta::query()->delete(); // Limpiar antiguas
         $lowStockProducts = Producto::whereRaw('stock <= stock_minimo')->get();
         foreach ($lowStockProducts as $p) {
             Alerta::create([
