@@ -9,7 +9,8 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PromotorController;
 use App\Http\Controllers\ProductoController;
 
-Route::get('/', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name('landing');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
@@ -28,6 +29,12 @@ Route::get('/setup-system', function () {
         return "ERROR AL MIGRAR: " . $e->getMessage() . " <br><br> EN LÍNEA: " . $e->getLine() . " <br> ARCHIVO: " . $e->getFile();
     }
 });
+
+// Password reset routes
+Route::get('/forgot-password', [AuthController::class, 'showForgetPasswordForm'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'reset'])->name('password.update');
 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
@@ -89,5 +96,43 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:manage_appointments'])->group(function () {
         Route::resource('clientes', \App\Http\Controllers\ClienteController::class);
         Route::resource('citas', \App\Http\Controllers\CitaController::class);
+        Route::post('citas/{cita}/asignar-estilista', [\App\Http\Controllers\CitaController::class, 'asignarEstilista'])->name('citas.asignar-estilista');
+        Route::post('citas/{cita}/completar', [\App\Http\Controllers\CitaController::class, 'completar'])->name('citas.completar');
     });
+
+    // Promociones (CU17)
+    Route::middleware(['permission:manage_promotions'])->group(function () {
+        Route::resource('promociones', \App\Http\Controllers\PromocionController::class);
+    });
+
+    // Ventas (CU22, CU23)
+    Route::middleware(['permission:manage_sales'])->group(function () {
+        Route::resource('ventas', \App\Http\Controllers\VentaController::class);
+        Route::post('ventas/{venta}/update-status', [\App\Http\Controllers\VentaController::class, 'updateStatus'])->name('ventas.update-status');
+    });
+
+    // Rutas públicas de Stripe y Tickets para clientes (bajo middleware auth)
+    Route::get('ventas/{venta}/stripe-success', [\App\Http\Controllers\VentaController::class, 'stripeSuccess'])->name('ventas.stripe.success');
+    Route::get('ventas/{venta}/stripe-cancel', [\App\Http\Controllers\VentaController::class, 'stripeCancel'])->name('ventas.stripe.cancel');
+    Route::get('ventas/{venta}/ticket', [\App\Http\Controllers\VentaController::class, 'ticket'])->name('ventas.ticket');
+    Route::get('citas/{cita}/ticket', [\App\Http\Controllers\CitaController::class, 'showTicket'])->name('citas.show-ticket');
+
+    // Comisiones (CU8)
+    Route::middleware(['permission:view_commissions'])->group(function () {
+        Route::get('comisiones', [\App\Http\Controllers\ComisionController::class, 'index'])->name('comisiones.index');
+        Route::post('comisiones/{comision}/pagar', [\App\Http\Controllers\ComisionController::class, 'pagar'])->name('comisiones.pagar');
+    });
+
+    // Alertas (CU15)
+    Route::middleware(['permission:view_stock_alerts'])->group(function () {
+        Route::get('alertas', [\App\Http\Controllers\AlertaController::class, 'index'])->name('alertas.index');
+        Route::post('alertas/{alerta}/leer', [\App\Http\Controllers\AlertaController::class, 'marcarLeida'])->name('alertas.leer');
+        Route::post('alertas/leer-todas', [\App\Http\Controllers\AlertaController::class, 'marcarTodasLeidas'])->name('alertas.leer-todas');
+    });
+
+    // Rutas exclusivas para el portal de clientes (Landing)
+    Route::post('/client/appointments', [\App\Http\Controllers\LandingController::class, 'agendarCita'])->name('client.appointments.store');
+    Route::post('/client/buy', [\App\Http\Controllers\LandingController::class, 'comprarProducto'])->name('client.products.buy');
+    Route::get('/client/available-hours', [\App\Http\Controllers\LandingController::class, 'getHorariosDisponibles'])->name('client.appointments.hours');
 });
+

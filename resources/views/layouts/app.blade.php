@@ -11,6 +11,17 @@
         
         body { 
             font-family: 'Outfit', sans-serif; 
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        input, textarea, select {
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
 
         .nav-link { 
@@ -122,15 +133,51 @@
                     <i class="fas fa-address-book w-5 text-center"></i>
                     <span class="text-sm">Directorio Clientes</span>
                 </a>
-                @endif
-                <a href="#" class="nav-link flex items-center space-x-3 p-3 opacity-50 cursor-not-allowed">
+                <a href="{{ route('citas.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('citas.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-alt w-5 text-center"></i>
                     <span class="text-sm">Citas</span>
                 </a>
+                @endif
                 @if(auth()->user()->hasPermission('view_schedules') || auth()->user()->hasPermission('manage_schedules'))
                 <a href="{{ route('horarios.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('horarios.*') ? 'active' : '' }}">
                     <i class="fas fa-clock w-5 text-center"></i>
                     <span class="text-sm">Horarios</span>
+                </a>
+                @endif
+
+                @if(auth()->user()->hasPermission('manage_sales') || auth()->user()->hasPermission('view_commissions') || auth()->user()->hasPermission('manage_promotions'))
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-8 mb-3 px-2">Finanzas y Ventas</p>
+                @endif
+
+                @if(auth()->user()->hasPermission('manage_sales'))
+                <a href="{{ route('ventas.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('ventas.*') ? 'active' : '' }}">
+                    <i class="fas fa-cash-register w-5 text-center"></i>
+                    <span class="text-sm">Ventas</span>
+                </a>
+                @endif
+
+                @if(auth()->user()->hasPermission('manage_promotions'))
+                <a href="{{ route('promociones.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('promociones.*') ? 'active' : '' }}">
+                    <i class="fas fa-percentage w-5 text-center"></i>
+                    <span class="text-sm">Promociones</span>
+                </a>
+                @endif
+
+                @if(auth()->user()->hasPermission('view_commissions'))
+                <a href="{{ route('comisiones.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('comisiones.*') ? 'active' : '' }}">
+                    <i class="fas fa-hand-holding-usd w-5 text-center"></i>
+                    <span class="text-sm">Comisiones</span>
+                </a>
+                @endif
+
+                @if(auth()->user()->hasPermission('view_stock_alerts'))
+                <a href="{{ route('alertas.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('alertas.*') ? 'active' : '' }}">
+                    <i class="fas fa-bell w-5 text-center"></i>
+                    <span class="text-sm">Alertas Stock</span>
+                    @php $alertCount = \App\Models\Alerta::where('leido', false)->count(); @endphp
+                    @if($alertCount > 0)
+                    <span class="ml-auto px-2 py-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full animate-pulse">{{ $alertCount }}</span>
+                    @endif
                 </a>
                 @endif
 
@@ -185,15 +232,25 @@
                 
                 <!-- Alertas Flash Globales -->
                 @if(session('success'))
-                    <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 mb-8 rounded-2xl flex items-center space-x-3 shadow-sm">
-                        <i class="fas fa-check-circle text-emerald-500 text-lg"></i>
-                        <p class="font-bold text-sm">{{ session('success') }}</p>
+                    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-6 py-4 mb-8 rounded-2xl flex items-center justify-between shadow-sm transition-all duration-500 ease-out transform translate-y-0 opacity-100 alert-box pointer-events-auto">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-check-circle text-emerald-500 text-lg"></i>
+                            <p class="font-bold text-sm">{{ session('success') }}</p>
+                        </div>
+                        <button onclick="dismissAlert(this)" class="text-emerald-400 hover:text-emerald-600 transition-colors ml-4 focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 @endif
                 @if(session('error'))
-                    <div class="bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 mb-8 rounded-2xl flex items-center space-x-3 shadow-sm">
-                        <i class="fas fa-exclamation-circle text-rose-500 text-lg"></i>
-                        <p class="font-bold text-sm">{{ session('error') }}</p>
+                    <div class="bg-rose-50 border border-rose-200 text-rose-800 px-6 py-4 mb-8 rounded-2xl flex items-center justify-between shadow-sm transition-all duration-500 ease-out transform translate-y-0 opacity-100 alert-box pointer-events-auto">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-exclamation-circle text-rose-500 text-lg"></i>
+                            <p class="font-bold text-sm">{{ session('error') }}</p>
+                        </div>
+                        <button onclick="dismissAlert(this)" class="text-rose-400 hover:text-rose-600 transition-colors ml-4 focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 @endif
 
@@ -229,6 +286,60 @@
                 setTimeout(() => overlay.classList.add('hidden'), 300);
             }
         }
+
+        function dismissAlert(button) {
+            const alert = button.closest('.alert-box');
+            if (alert) {
+                alert.style.transition = 'all 0.5s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-20px)';
+                alert.style.marginTop = '-' + alert.offsetHeight + 'px';
+                alert.style.marginBottom = '0';
+                alert.style.paddingTop = '0';
+                alert.style.paddingBottom = '0';
+                alert.style.height = '0';
+                alert.style.overflow = 'hidden';
+                alert.style.border = 'none';
+                setTimeout(() => alert.remove(), 500);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert-box');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.style.transition = 'all 0.5s ease';
+                        alert.style.opacity = '0';
+                        alert.style.transform = 'translateY(-20px)';
+                        alert.style.marginTop = '-' + alert.offsetHeight + 'px';
+                        alert.style.marginBottom = '0';
+                        alert.style.paddingTop = '0';
+                        alert.style.paddingBottom = '0';
+                        alert.style.height = '0';
+                        alert.style.overflow = 'hidden';
+                        alert.style.border = 'none';
+                        setTimeout(() => alert.remove(), 500);
+                    }
+                }, 10000); // 10 segundos
+            });
+        });
+
+        // Bloquear copiar, cortar y click derecho
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+
+        // Bloquear combinaciones de teclado Ctrl+C, Ctrl+A, Ctrl+X, Ctrl+U y F12
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'a' || e.key === 'A' || e.key === 'x' || e.key === 'X' || e.key === 'u' || e.key === 'U')) {
+                e.preventDefault();
+            }
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+        });
     </script>
 
     @yield('scripts')

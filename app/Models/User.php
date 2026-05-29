@@ -26,6 +26,7 @@ class User extends Authenticatable
         'telefono',
         'password',
         'role_id',
+        'comision_porcentaje',
     ];
 
     /**
@@ -81,5 +82,13 @@ class User extends Authenticatable
     public function activityLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    /**
+     * Relationship with comisiones.
+     */
+    public function comisiones(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Comision::class, 'estilista_id');
     }
 }

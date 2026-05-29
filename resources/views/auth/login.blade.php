@@ -166,9 +166,23 @@
                     <p class="text-gray-400 text-sm" id="authSubtitle">Gestiona la magia detrás del salón.</p>
                 </div>
 
+                @if (session('status'))
+                    <div class="bg-emerald-50 text-emerald-600 text-xs p-4 rounded-xl mb-8 font-bold text-center border border-emerald-100">
+                        {{ session('status') }}
+                    </div>
+                @endif
+
                 @if ($errors->any())
-                    <div class="bg-rose-50 text-rose-600 text-[10px] p-4 rounded-xl mb-8 font-bold text-center border border-rose-100">
-                        {{ $errors->first() }}
+                    <div class="bg-rose-50 text-rose-600 text-xs p-4 rounded-xl mb-8 font-bold text-center border border-rose-100 flex flex-col items-center justify-center gap-2">
+                        <span>{{ $errors->first() }}</span>
+                        @if (session('show_forgot_password') || (old('email') && \Illuminate\Support\Facades\Cache::get('login_failed_' . old('email'), 0) >= 3))
+                            <div class="mt-2">
+                                <a href="{{ route('password.request', ['email' => old('email')]) }}" class="inline-flex items-center space-x-2 bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition shadow-lg shadow-rose-100">
+                                    <i class="fas fa-key"></i>
+                                    <span>Olvidé mi contraseña</span>
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 @endif
 

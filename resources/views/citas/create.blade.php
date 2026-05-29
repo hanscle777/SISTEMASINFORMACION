@@ -21,6 +21,7 @@
             @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Cliente -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Cliente <span class="text-rose-500">*</span></label>
                     <select name="cliente_id" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium">
@@ -33,28 +34,43 @@
                     </select>
                 </div>
                 
+                <!-- Servicio -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Servicio <span class="text-rose-500">*</span></label>
-                    <select name="servicio_id" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium">
+                    <select name="servicio_id" id="servicio_id" onchange="checkPromotion()" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium">
                         <option value="">Seleccione un servicio</option>
                         @foreach($servicios as $servicio)
-                            <option value="{{ $servicio->id }}">{{ $servicio->nombre }} - Bs{{ $servicio->precio }}</option>
+                            <option value="{{ $servicio->id }}" data-precio="{{ $servicio->precio }}">{{ $servicio->nombre }} - Bs{{ $servicio->precio }}</option>
                         @endforeach
                     </select>
+                    
+                    <!-- Contenedor Promoción Reactiva -->
+                    <div id="promo-badge-container" class="mt-2.5 hidden">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 text-xs font-black border border-rose-100">
+                            <i class="fas fa-percentage animate-pulse"></i>
+                            <span id="promo-text">Promoción Activa</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1 font-bold">
+                            Precio Final: <span class="text-emerald-600 font-black text-sm" id="promo-price">Bs0.00</span>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Fecha -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Fecha <span class="text-rose-500">*</span></label>
                     <input type="date" name="fecha" value="{{ old('fecha') }}" required
                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium">
                 </div>
 
+                <!-- Hora -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Hora <span class="text-rose-500">*</span></label>
                     <input type="time" name="hora" value="{{ old('hora') }}" required
                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium">
                 </div>
 
+                <!-- Estilista -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Estilista (Opcional)</label>
                     <select name="estilista_id" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium">
@@ -65,12 +81,14 @@
                     </select>
                 </div>
 
+                <!-- Notas -->
                 <div class="md:col-span-2">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Notas / Observaciones</label>
-                    <textarea name="notas" rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium" placeholder="Opcional..."></textarea>
+                    <textarea name="notas" rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all text-gray-700 font-medium" placeholder="Notas sobre el servicio o requerimiento especial..."></textarea>
                 </div>
             </div>
 
+            <!-- Botones -->
             <div class="pt-6 border-t border-gray-100 flex justify-end gap-3">
                 <a href="{{ route('citas.index') }}" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-bold transition-colors">Cancelar</a>
                 <button type="submit" class="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold shadow-lg shadow-rose-200 transition-all">
@@ -80,4 +98,38 @@
         </form>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // active service promotions keyed by service_id
+    const promociones = @json($promociones);
+
+    function checkPromotion() {
+        const select = document.getElementById('servicio_id');
+        const selectedOption = select.options[select.selectedIndex];
+        const container = document.getElementById('promo-badge-container');
+        
+        if (!selectedOption || !selectedOption.value) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        const precio = parseFloat(selectedOption.dataset.precio) || 0;
+        const serviceId = selectedOption.value;
+        const promo = promociones[serviceId];
+
+        if (promo) {
+            const descPorcentaje = parseFloat(promo.descuento_porcentaje);
+            const descuentoVal = (precio * descPorcentaje) / 100;
+            const precioFinal = precio - descuentoVal;
+
+            document.getElementById('promo-text').innerText = `¡Promoción Activa! ${descPorcentaje}% de descuento`;
+            document.getElementById('promo-price').innerText = `Bs${precioFinal.toFixed(2)} (Ahorras Bs${descuentoVal.toFixed(2)})`;
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+</script>
 @endsection

@@ -26,6 +26,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'Gestionar Horarios', 'slug' => 'manage_schedules'],
             ['name' => 'Consultar Horarios', 'slug' => 'view_schedules'],
             ['name' => 'Gestionar Servicios', 'slug' => 'manage_services'],
+            ['name' => 'Gestionar Promociones', 'slug' => 'manage_promotions'],
+            ['name' => 'Gestionar Ventas', 'slug' => 'manage_sales'],
+            ['name' => 'Ver Comisiones', 'slug' => 'view_commissions'],
+            ['name' => 'Ver Alertas Stock', 'slug' => 'view_stock_alerts'],
         ];
 
         foreach ($permissions as $p) {
@@ -37,17 +41,25 @@ class RolePermissionSeeder extends Seeder
             'administrador' => [
                 'name' => 'Administrador',
                 'description' => 'Acceso total al sistema',
-                'permissions' => ['manage_users', 'manage_roles', 'view_audit_log', 'manage_appointments', 'view_reports', 'manage_inventory', 'view_inventory', 'manage_schedules', 'view_schedules', 'manage_services']
+                'permissions' => [
+                    'manage_users', 'manage_roles', 'view_audit_log', 'manage_appointments', 
+                    'view_reports', 'manage_inventory', 'view_inventory', 'manage_schedules', 
+                    'view_schedules', 'manage_services', 'manage_promotions', 'manage_sales', 
+                    'view_commissions', 'view_stock_alerts'
+                ]
             ],
             'recepcionista' => [
                 'name' => 'Recepcionista',
                 'description' => 'Gestión de citas y clientes',
-                'permissions' => ['manage_appointments', 'manage_users', 'view_schedules', 'view_inventory'] // Limited user management
+                'permissions' => [
+                    'manage_appointments', 'manage_users', 'view_schedules', 
+                    'view_inventory', 'manage_sales', 'view_stock_alerts', 'view_commissions'
+                ]
             ],
             'estilista' => [
                 'name' => 'Estilista',
                 'description' => 'Consulta de agenda propia',
-                'permissions' => ['manage_appointments', 'view_schedules']
+                'permissions' => ['manage_appointments', 'view_schedules', 'view_commissions', 'manage_sales']
             ],
             'cliente' => [
                 'name' => 'Cliente',

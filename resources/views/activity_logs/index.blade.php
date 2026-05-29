@@ -84,6 +84,7 @@
                         @if($log->details)
                             @php
                                 $detailsArray = is_string($log->details) ? json_decode($log->details, true) : $log->details;
+                                $ignoredKeys = ['stripe_session_id', 'password', 'remember_token', 'token', 'api_token', 'password_confirmation'];
                             @endphp
                             @if(is_array($detailsArray) && !empty($detailsArray))
                                 <div class="mt-3">
@@ -104,7 +105,7 @@
                                                         </h4>
                                                         <div class="space-y-1">
                                                             @foreach($detailsArray['old'] as $key => $value)
-                                                                @if(!is_array($value) && (!isset($detailsArray['new'][$key]) || $detailsArray['new'][$key] != $value))
+                                                                @if(!in_array($key, $ignoredKeys) && !is_array($value) && (!isset($detailsArray['new'][$key]) || $detailsArray['new'][$key] != $value))
                                                                     <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-rose-50/50 p-1.5 rounded-md border border-rose-100">
                                                                         <span class="text-[8px] font-bold text-rose-400 uppercase truncate pr-2">{{ str_replace('_', ' ', $key) }}</span>
                                                                         <span class="text-[10px] font-semibold text-rose-700 break-words text-left sm:text-right">{{ $value === null ? 'Nulo' : (is_bool($value) ? ($value ? 'Sí' : 'No') : $value) }}</span>
@@ -119,7 +120,7 @@
                                                         </h4>
                                                         <div class="space-y-1">
                                                             @foreach($detailsArray['new'] as $key => $value)
-                                                                @if(!is_array($value) && (!isset($detailsArray['old'][$key]) || $detailsArray['old'][$key] != $value))
+                                                                @if(!in_array($key, $ignoredKeys) && !is_array($value) && (!isset($detailsArray['old'][$key]) || $detailsArray['old'][$key] != $value))
                                                                     <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-emerald-50/50 p-1.5 rounded-md border border-emerald-100">
                                                                         <span class="text-[8px] font-bold text-emerald-400 uppercase truncate pr-2">{{ str_replace('_', ' ', $key) }}</span>
                                                                         <span class="text-[10px] font-semibold text-emerald-700 break-words text-left sm:text-right">{{ $value === null ? 'Nulo' : (is_bool($value) ? ($value ? 'Sí' : 'No') : $value) }}</span>
@@ -132,7 +133,7 @@
                                             @else
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                                     @foreach($detailsArray as $key => $value)
-                                                        @if(!is_array($value) && !is_object($value))
+                                                        @if(!in_array($key, $ignoredKeys) && !is_array($value) && !is_object($value))
                                                             <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 p-1.5 rounded-md border border-gray-100">
                                                                 <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 sm:mb-0 truncate pr-2">{{ str_replace('_', ' ', $key) }}</span>
                                                                 <span class="text-[10px] font-semibold text-gray-800 break-words text-left sm:text-right">{{ $value === null ? 'Nulo' : (is_bool($value) ? ($value ? 'Sí' : 'No') : $value) }}</span>
@@ -141,10 +142,85 @@
                                                     @endforeach
                                                 </div>
                                                 @foreach($detailsArray as $key => $value)
-                                                    @if(is_array($value) || is_object($value))
-                                                        <div class="mt-2 border-t border-gray-50 pt-2">
-                                                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">{{ str_replace('_', ' ', $key) }}</span>
-                                                            <pre class="text-[9px] text-gray-500 font-mono p-2 bg-gray-50 rounded-md overflow-x-auto border border-gray-100">@json($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)</pre>
+                                                    @if(!in_array($key, $ignoredKeys) && (is_array($value) || is_object($value)))
+                                                        @php
+                                                            $nestedArray = is_object($value) ? (array) $value : $value;
+                                                        @endphp
+                                                        <div class="mt-3 border-t border-gray-150 pt-3">
+                                                            <span class="text-[10px] font-black text-indigo-500 uppercase tracking-wider mb-2 block">{{ str_replace('_', ' ', $key) }}</span>
+                                                            
+                                                            @if(!empty($nestedArray))
+                                                                @if(!\Illuminate\Support\Arr::isAssoc($nestedArray))
+                                                                    <div class="overflow-x-auto border border-gray-150 rounded-xl shadow-sm">
+                                                                        <table class="w-full text-left text-[10px]">
+                                                                            <thead>
+                                                                                <tr class="bg-gray-50 border-b border-gray-150">
+                                                                                    @php
+                                                                                        $firstItem = is_object($nestedArray[0]) ? (array) $nestedArray[0] : $nestedArray[0];
+                                                                                        $validKeys = array_filter(array_keys($firstItem), function($k) {
+                                                                                            return !in_array($k, ['id', 'venta_id', 'cita_id', 'created_at', 'updated_at', 'deleted_at']);
+                                                                                        });
+                                                                                    @endphp
+                                                                                    @foreach($validKeys as $itemKey)
+                                                                                        <th class="px-3 py-2 font-bold text-gray-500 uppercase tracking-wider">
+                                                                                            {{ str_replace('_', ' ', $itemKey) }}
+                                                                                        </th>
+                                                                                    @endforeach
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody class="divide-y divide-gray-100">
+                                                                                @foreach($nestedArray as $item)
+                                                                                    @php
+                                                                                        $itemArray = is_object($item) ? (array) $item : $item;
+                                                                                    @endphp
+                                                                                    <tr class="hover:bg-indigo-50/20 transition-colors">
+                                                                                        @foreach($validKeys as $itemKey)
+                                                                                            <td class="px-3 py-2 text-gray-700 font-semibold">
+                                                                                                @php
+                                                                                                    $itemVal = $itemArray[$itemKey] ?? null;
+                                                                                                @endphp
+                                                                                                @if(is_array($itemVal) || is_object($itemVal))
+                                                                                                    @php
+                                                                                                        $subVal = is_object($itemVal) ? (array) $itemVal : $itemVal;
+                                                                                                    @endphp
+                                                                                                    {{ $subVal['nombre'] ?? $subVal['name'] ?? '...' }}
+                                                                                                @else
+                                                                                                    @if($itemKey === 'producto_id')
+                                                                                                        @php
+                                                                                                            $prod = \App\Models\Producto::find($itemVal);
+                                                                                                        @endphp
+                                                                                                        {{ $prod ? $prod->nombre : "Producto #$itemVal" }}
+                                                                                                    @elseif($itemKey === 'servicio_id')
+                                                                                                        @php
+                                                                                                            $serv = \App\Models\Servicio::find($itemVal);
+                                                                                                        @endphp
+                                                                                                        {{ $serv ? $serv->nombre : "Servicio #$itemVal" }}
+                                                                                                    @else
+                                                                                                        {{ $itemVal === null ? 'Nulo' : (is_bool($itemVal) ? ($itemVal ? 'Sí' : 'No') : $itemVal) }}
+                                                                                                    @endif
+                                                                                                @endif
+                                                                                            </td>
+                                                                                        @endforeach
+                                                                                    </tr>
+                                                                                @endforeach
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                                        @foreach($nestedArray as $subKey => $subValue)
+                                                                            @if(!is_array($subValue) && !is_object($subValue))
+                                                                                <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50/50 p-1.5 rounded-md border border-gray-100">
+                                                                                    <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5 sm:mb-0 truncate pr-2">{{ str_replace('_', ' ', $subKey) }}</span>
+                                                                                    <span class="text-[10px] font-semibold text-gray-800 break-words text-left sm:text-right">{{ $subValue === null ? 'Nulo' : (is_bool($subValue) ? ($subValue ? 'Sí' : 'No') : $subValue) }}</span>
+                                                                                </div>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endif
+                                                            @else
+                                                                <span class="text-[10px] font-semibold text-gray-400 italic">Vacío</span>
+                                                            @endif
                                                         </div>
                                                     @endif
                                                 @endforeach

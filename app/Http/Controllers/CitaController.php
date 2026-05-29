@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Cita;
 use App\Models\User;
 use App\Models\Servicio;
+use App\Models\Promocion;
+use App\Models\Comision;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Traits\LogsActivity;
 
 class CitaController extends Controller
@@ -18,13 +21,25 @@ class CitaController extends Controller
         
         // Si es estilista, solo ve sus citas
         if ($user->hasRole('estilista')) {
-            $citas = Cita::with(['cliente', 'servicio'])->where('estilista_id', $user->id)->orderBy('fecha', 'desc')->orderBy('hora', 'desc')->paginate(15);
+            $citas = Cita::with(['cliente', 'servicio'])
+                ->where('estilista_id', $user->id)
+                ->orderBy('fecha', 'desc')
+                ->orderBy('hora', 'desc')
+                ->paginate(15);
         } else {
             // Recepcionista o Admin ven todas
-            $citas = Cita::with(['cliente', 'estilista', 'servicio'])->orderBy('fecha', 'desc')->orderBy('hora', 'desc')->paginate(15);
+            $citas = Cita::with(['cliente', 'estilista', 'servicio'])
+                ->orderBy('fecha', 'desc')
+                ->orderBy('hora', 'desc')
+                ->paginate(15);
         }
 
-        return view('citas.index', compact('citas'));
+        // Fetch all stylists for the quick assignment dropdown/modal
+        $estilistas = User::whereHas('role', function($q) { 
+            $q->where('slug', 'estilista'); 
+        })->get();
+
+        return view('citas.index', compact('citas', 'estilistas'));
     }
 
     // CU11 - Agendar Cita
@@ -32,12 +47,20 @@ class CitaController extends Controller
     {
         $clientes = User::whereHas('role', function($q) { $q->where('slug', 'cliente'); })->get();
         $estilistas = User::whereHas('role', function($q) { $q->where('slug', 'estilista'); })->get();
-        $servicios = Servicio::all();
+        $servicios = Servicio::where('activo', true)->get();
         
         // Si se pasa un cliente_id preseleccionado desde la vista de clientes
         $selectedClienteId = $request->query('cliente_id');
+
+        // Fetch promotions for services to display them
+        $promociones = Promocion::where('activo', true)
+            ->whereNotNull('servicio_id')
+            ->whereDate('fecha_inicio', '<=', now())
+            ->whereDate('fecha_fin', '>=', now())
+            ->get()
+            ->keyBy('servicio_id');
         
-        return view('citas.create', compact('clientes', 'estilistas', 'servicios', 'selectedClienteId'));
+        return view('citas.create', compact('clientes', 'estilistas', 'servicios', 'selectedClienteId', 'promociones'));
     }
 
     public function store(Request $request)
@@ -47,7 +70,7 @@ class CitaController extends Controller
             'servicio_id' => 'required|exists:servicios,id',
             'fecha' => 'required|date',
             'hora' => 'required',
-            'estilista_id' => 'nullable|exists:users,id', // Opcional al crear, puede asignarse luego (CU12)
+            'estilista_id' => 'nullable|exists:users,id',
             'notas' => 'nullable|string'
         ]);
 
@@ -62,7 +85,7 @@ class CitaController extends Controller
     {
         $clientes = User::whereHas('role', function($q) { $q->where('slug', 'cliente'); })->get();
         $estilistas = User::whereHas('role', function($q) { $q->where('slug', 'estilista'); })->get();
-        $servicios = Servicio::all();
+        $servicios = Servicio::where('activo', true)->get();
         
         return view('citas.edit', compact('cita', 'clientes', 'estilistas', 'servicios'));
     }
@@ -74,8 +97,8 @@ class CitaController extends Controller
             'servicio_id' => 'required|exists:servicios,id',
             'fecha' => 'required|date',
             'hora' => 'required',
-            'estilista_id' => 'nullable|exists:users,id', // CU12
-            'estado' => 'required|in:pendiente,confirmada,completada,cancelada', // CU19
+            'estilista_id' => 'nullable|exists:users,id',
+            'estado' => 'required|in:pendiente,confirmada,completada,cancelada',
             'notas' => 'nullable|string'
         ]);
 
@@ -98,5 +121,132 @@ class CitaController extends Controller
         $this->logActivity('DELETE', "Cita eliminada ID: {$id}", []);
 
         return redirect()->route('citas.index')->with('success', 'Cita eliminada exitosamente.');
+    }
+
+    // CU12 - Asignar Estilista a Servicio
+    public function asignarEstilista(Request $request, Cita $cita)
+    {
+        $request->validate([
+            'estilista_id' => 'required|exists:users,id',
+        ]);
+
+        $estilista = User::find($request->estilista_id);
+        if (!$estilista->hasRole('estilista')) {
+            return back()->with('error', 'El usuario seleccionado no es un estilista.');
+        }
+
+        $oldData = $cita->toArray();
+        $cita->update([
+            'estilista_id' => $request->estilista_id,
+            'estado' => $cita->estado === 'pendiente' ? 'confirmada' : $cita->estado // auto confirm if pending
+        ]);
+
+        $this->logActivity('UPDATE', "Estilista asignado a cita ID: {$cita->id}", [
+            'old' => $oldData,
+            'new' => $cita->fresh()->toArray()
+        ]);
+
+        return redirect()->route('citas.index')->with('success', "Estilista {$estilista->name} asignado exitosamente.");
+    }
+
+    // CU18 - Registrar Servicio Realizado & CU8 - Calcular Comisión
+    public function completar(Request $request, Cita $cita)
+    {
+        if ($cita->estado === 'completada') {
+            return back()->with('error', 'Esta cita ya ha sido registrada como completada.');
+        }
+
+        if (!$cita->estilista_id) {
+            return back()->with('error', 'Debe asignar un estilista a la cita antes de completarla.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Update appointment state to completed
+            $cita->estado = 'completada';
+            $cita->save();
+
+            // 2. Fetch service price & check for promotions (CU17)
+            $servicio = $cita->servicio;
+            $precioOriginal = $servicio->precio;
+            
+            $promocion = Promocion::where('activo', true)
+                ->where('servicio_id', $servicio->id)
+                ->whereDate('fecha_inicio', '<=', $cita->fecha)
+                ->whereDate('fecha_fin', '>=', $cita->fecha)
+                ->first();
+
+            $descuento = 0;
+            if ($promocion) {
+                $descuento = ($precioOriginal * $promocion->descuento_porcentaje) / 100;
+            }
+            $precioFinal = $precioOriginal - $descuento;
+
+            // 3. Calculate Stylist Commission (CU8)
+            $estilista = User::find($cita->estilista_id);
+            $porcentajeComision = $estilista->comision_porcentaje ?: 15.00;
+            $montoComision = ($precioFinal * $porcentajeComision) / 100;
+
+            // 4. Save commission record
+            Comision::create([
+                'estilista_id' => $cita->estilista_id,
+                'cita_id' => $cita->id,
+                'monto_servicio' => $precioFinal,
+                'porcentaje_comision' => $porcentajeComision,
+                'monto_comision' => $montoComision,
+                'estado' => 'pendiente',
+                'fecha_calculo' => now()
+            ]);
+
+            DB::commit();
+
+            $this->logActivity('UPDATE', "Servicio realizado registrado para Cita ID: {$cita->id}. Comisión de Bs{$montoComision} calculada para {$estilista->name}.", [
+                'cita_id' => $cita->id,
+                'monto_pagado' => $precioFinal,
+                'comision' => $montoComision
+            ]);
+
+            return redirect()->route('citas.show-ticket', $cita->id)
+                ->with('success', 'Servicio registrado como completado. Comisión calculada correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al completar el servicio: ' . $e->getMessage());
+        }
+    }
+
+    // CU19 - Generar Ticket Servicio
+    public function showTicket(Cita $cita)
+    {
+        $user = auth()->user();
+        $isOwner = $cita->cliente_id === $user->id;
+        $isStylist = $cita->estilista_id === $user->id;
+        $hasPermission = $user->hasPermission('manage_appointments');
+
+        if (!$isOwner && !$isStylist && !$hasPermission) {
+            abort(403, 'No tienes permiso para ver este ticket.');
+        }
+
+        if ($cita->estado !== 'completada') {
+            if ($hasPermission) {
+                return redirect()->route('citas.index')->with('error', 'El ticket solo se puede generar para servicios completados.');
+            } else {
+                return redirect()->route('landing')->with('error', 'El ticket solo se puede generar para servicios completados.');
+            }
+        }
+
+        $cita->load(['cliente', 'estilista', 'servicio']);
+        
+        // Retrieve calculated commission/discount details
+        $comision = Comision::where('cita_id', $cita->id)->first();
+        
+        $promocion = Promocion::where('activo', true)
+            ->where('servicio_id', $cita->servicio_id)
+            ->whereDate('fecha_inicio', '<=', $cita->fecha)
+            ->whereDate('fecha_fin', '>=', $cita->fecha)
+            ->first();
+
+        return view('citas.ticket', compact('cita', 'comision', 'promocion'));
     }
 }

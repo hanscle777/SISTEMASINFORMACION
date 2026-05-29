@@ -74,7 +74,7 @@
                     <td class="p-5">
                         <div class="flex items-center space-x-3">
                             @if($producto->imagen)
-                                <img src="{{ asset($producto->imagen) }}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-rose-100">
+                                <img src="{{ \Illuminate\Support\Str::startsWith($producto->imagen, 'http') ? $producto->imagen : asset($producto->imagen) }}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-rose-100">
                             @else
                                 <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
                                     <i class="fas fa-box text-xl"></i>
