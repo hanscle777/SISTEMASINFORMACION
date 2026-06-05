@@ -30,6 +30,15 @@ Route::get('/setup-system', function () {
     }
 });
 
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        return "Caché optimizada y limpiada con éxito en producción.";
+    } catch (\Exception $e) {
+        return "Error al limpiar caché: " . $e->getMessage();
+    }
+});
+
 // Password reset routes
 Route::get('/forgot-password', [AuthController::class, 'showForgetPasswordForm'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
