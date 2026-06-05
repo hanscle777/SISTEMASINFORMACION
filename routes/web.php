@@ -39,6 +39,19 @@ Route::get('/clear-cache', function () {
     }
 });
 
+Route::get('/test-resend', function () {
+    try {
+        $to = request('email', 'jhonsalas68@gmail.com');
+        \Illuminate\Support\Facades\Mail::raw('Esta es una prueba de conexión directa con Resend.', function ($message) use ($to) {
+            $message->to($to)->subject('Prueba de Conexión Resend');
+        });
+        return "¡Correo de prueba enviado con éxito a $to!";
+    } catch (\Exception $e) {
+        return "Error al enviar correo: <pre>" . $e->getMessage() . "</pre>";
+    }
+});
+
+
 // Password reset routes
 Route::get('/forgot-password', [AuthController::class, 'showForgetPasswordForm'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
