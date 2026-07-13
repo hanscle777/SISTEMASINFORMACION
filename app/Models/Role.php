@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
-    protected $fillable = ['name', 'slug', 'description'];
+    protected $fillable = ['name', 'slug', 'description', 'estado'];
+
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
 
     /**
      * Users associated with this role.

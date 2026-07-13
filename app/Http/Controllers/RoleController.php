@@ -28,6 +28,7 @@ class RoleController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'estado' => 'boolean',
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,id'
         ]);
@@ -35,7 +36,8 @@ class RoleController extends Controller
         $role = Role::create([
             'name' => $request->name,
             'slug' => \Illuminate\Support\Str::slug($request->name),
-            'description' => $request->description
+            'description' => $request->description,
+            'estado' => $request->boolean('estado', true),
         ]);
 
         if ($request->has('permissions')) {
@@ -56,21 +58,35 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'estado' => 'boolean',
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,id'
         ]);
 
+        $role->name = $request->name;
+        $role->description = $request->description;
+        $role->estado = $request->boolean('estado', true);
+
+        if (!in_array($role->slug, ['administrador', 'cliente'])) {
+            $role->slug = \Illuminate\Support\Str::slug($request->name);
+        }
+
+        $role->save();
+
         $oldPermissions = $role->permissions()->pluck('name')->toArray();
         $role->permissions()->sync($request->permissions ?? []);
-        $newPermissions = Role::find($role->id)->permissions()->pluck('name')->toArray();
+        $newPermissions = $role->permissions()->pluck('name')->toArray();
 
-        $this->logActivity('UPDATE_ROLE', "Permisos actualizados para el rol: {$role->name}", [
+        $this->logActivity('UPDATE_ROLE', "Rol actualizado: {$role->name}", [
             'role' => $role->name,
+            'estado' => $role->estado,
             'old_permissions' => $oldPermissions,
             'new_permissions' => $newPermissions
         ]);
 
-        return redirect()->route('roles.index')->with('success', 'Permisos de rol actualizados exitosamente.');
+        return redirect()->route('roles.index')->with('success', 'Rol actualizado exitosamente.');
     }
 
     public function destroy(Role $role)

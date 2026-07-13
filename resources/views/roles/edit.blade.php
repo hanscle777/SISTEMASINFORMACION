@@ -29,6 +29,13 @@
                         <input type="text" name="description" id="description" value="{{ old('description', $role->description) }}" 
                             class="w-full px-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition duration-200 shadow-sm">
                     </div>
+                    <div>
+                        <label for="estado" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Estado del Rol</label>
+                        <select name="estado" id="estado" class="w-full px-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition duration-200 shadow-sm">
+                            <option value="1" {{ old('estado', $role->estado) ? 'selected' : '' }}>Activo</option>
+                            <option value="0" {{ !old('estado', $role->estado) ? 'selected' : '' }}>Inactivo</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
