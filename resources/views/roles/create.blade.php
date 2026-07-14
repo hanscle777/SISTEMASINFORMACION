@@ -15,7 +15,7 @@
         <form action="{{ route('roles.store') }}" method="POST">
             @csrf
             <div class="space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
                         <label for="name" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Nombre del Rol</label>
                         <input type="text" name="name" id="name" value="{{ old('name') }}" required
@@ -29,6 +29,14 @@
                             class="w-full px-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition duration-200 shadow-sm"
                             placeholder="¿Qué hace este rol?">
                         @error('description') <p class="text-red-500 text-xs mt-2 font-bold">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label for="estado" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Estado del Rol</label>
+                        <select name="estado" id="estado" class="w-full px-4 py-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition duration-200 shadow-sm">
+                            <option value="1" {{ old('estado', true) ? 'selected' : '' }}>Activo</option>
+                            <option value="0" {{ !old('estado', true) ? 'selected' : '' }}>Inactivo</option>
+                        </select>
+                        @error('estado') <p class="text-red-500 text-xs mt-2 font-bold">{{ $message }}</p> @enderror
                     </div>
                 </div>
 

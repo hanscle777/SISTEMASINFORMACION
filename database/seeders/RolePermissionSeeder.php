@@ -71,7 +71,8 @@ class RolePermissionSeeder extends Seeder
         foreach ($roles as $slug => $data) {
             $role = Role::updateOrCreate(['slug' => $slug], [
                 'name' => $data['name'],
-                'description' => $data['description']
+                'description' => $data['description'],
+                'estado' => true,
             ]);
 
             $permissionIds = Permission::whereIn('slug', $data['permissions'])->pluck('id');

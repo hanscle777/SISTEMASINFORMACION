@@ -34,7 +34,12 @@
                 </div>
             </div>
 
-            <h3 class="text-2xl font-black text-gray-900 mb-2 tracking-tight group-hover:text-rose-600 transition-colors italic">{{ $role->name }}</h3>
+            <div class="flex items-center justify-between gap-4 mb-2">
+                <h3 class="text-2xl font-black text-gray-900 tracking-tight group-hover:text-rose-600 transition-colors italic">{{ $role->name }}</h3>
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest {{ $role->estado ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-600' }}">
+                    {{ $role->estado ? 'Activo' : 'Inactivo' }}
+                </span>
+            </div>
             <p class="text-gray-500 font-medium text-sm leading-relaxed mb-6 flex-grow">
                 {{ $role->description ?? 'Sin descripción definida para este nivel de acceso.' }}
             </p>
