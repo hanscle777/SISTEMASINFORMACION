@@ -319,7 +319,21 @@ class LandingController extends Controller
 
     public function getHorariosDisponibles(Request $request)
     {
-        $request->validate([
+        // Log request info for debugging AJAX availability issues
+        \Log::debug('getHorariosDisponibles called', [
+            'fecha' => $request->input('fecha'),
+            'servicio_id' => $request->input('servicio_id'),
+            'estilista_id' => $request->input('estilista_id'),
+            'auth' => auth()->check(),
+            'auth_id' => auth()->id(),
+            'ip' => $request->ip(),
+            'accept' => $request->header('Accept'),
+            'cookie_present' => $request->header('Cookie') ? true : false,
+            'x_requested_with' => $request->header('X-Requested-With'),
+        ]);
+
+        try {
+            $request->validate([
             'fecha' => 'required|date|after_or_equal:today',
             'servicio_id' => 'required|exists:servicios,id',
             'estilista_id' => 'nullable|exists:users,id',
@@ -360,6 +374,7 @@ class LandingController extends Controller
         $horarios = $queryHorarios->get();
 
         if ($horarios->isEmpty()) {
+            \Log::debug('getHorariosDisponibles: no horarios found', ['dia' => $diaSemana, 'estilistaId' => $estilistaId]);
             return response()->json([]);
         }
 
@@ -438,6 +453,12 @@ class LandingController extends Controller
             $startTime->addMinutes(30);
         }
 
+        \Log::debug('getHorariosDisponibles returning slots', ['count' => count($slots), 'sample' => array_slice($slots, 0, 10)]);
         return response()->json($slots)->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        } catch (\Throwable $e) {
+            \Log::error('getHorariosDisponibles exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            // Re-throw so Laravel handles error responses normally
+            throw $e;
+        }
     }
 }

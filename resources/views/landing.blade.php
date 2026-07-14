@@ -19,9 +19,15 @@
                     Experimenta el cuidado capilar y estético premium en Salón Anita. Agenda citas en segundos con tus estilistas favoritos y adquiere productos exclusivos con envío directo.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                    <a href="#servicios" class="w-full sm:w-auto text-center bg-stone-900 hover:bg-amber-600 text-white font-extrabold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-stone-200">
-                        <i class="far fa-calendar-alt mr-2"></i> Agendar Cita
-                    </a>
+                    @guest
+                        <a href="{{ route('login') }}" class="w-full sm:w-auto text-center bg-stone-900 hover:bg-amber-600 text-white font-extrabold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-stone-200">
+                            <i class="far fa-calendar-alt mr-2"></i> Iniciar sesión para agendar
+                        </a>
+                    @else
+                        <button type="button" onclick="openBookingModal('{{ $servicios->first()?->id ?? '' }}', @js($servicios->first()?->nombre ?? 'Servicio'))" class="w-full sm:w-auto text-center bg-stone-900 hover:bg-amber-600 text-white font-extrabold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-stone-200">
+                            <i class="far fa-calendar-alt mr-2"></i> Agendar Cita
+                        </button>
+                    @endguest
                     <a href="#productos" class="w-full sm:w-auto text-center bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-extrabold px-8 py-4 rounded-2xl transition-all shadow-sm">
                         <i class="fas fa-shopping-bag mr-2"></i> Ver Catálogo
                     </a>
@@ -521,26 +527,50 @@
             horaSelect.disabled = true;
             horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
 
-            const url = `/client/available-hours?fecha=${fecha}&servicio_id=${servicioId}` + 
-                        (estilistaId ? `&estilista_id=${estilistaId}` : '') +
-                        `&_=${new Date().getTime()}`;
+            const routePath = '{{ route('client.appointments.hours', [], false) }}';
+            const url = routePath + '?fecha=' + encodeURIComponent(fecha) + '&servicio_id=' + encodeURIComponent(servicioId) +
+                        (estilistaId ? '&estilista_id=' + encodeURIComponent(estilistaId) : '') +
+                        '&_=' + new Date().getTime();
 
-            fetch(url)
-                .then(response => response.json())
+            console.debug('fetchAvailableHours => servicioId:', servicioId, 'estilistaId:', estilistaId, 'routePath:', routePath, 'url:', url, 'origin:', window.location.origin);
+
+            fetch(url, {
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('fetchAvailableHours invalid response', { status: response.status, text });
+                            throw new Error('HTTP ' + response.status);
+                        });
+                    }
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!contentType.includes('application/json')) {
+                        return response.text().then(text => {
+                            console.error('fetchAvailableHours unexpected content-type', { contentType, text });
+                            throw new Error('Unexpected response format');
+                        });
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     horaSelect.innerHTML = '';
-                    if (data.length === 0) {
+                    if (!Array.isArray(data) || data.length === 0) {
                         horaSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
                         horaSelect.disabled = true;
-                    } else {
-                        data.forEach(slot => {
-                            const option = document.createElement('option');
-                            option.value = slot.valor;
-                            option.textContent = slot.texto;
-                            horaSelect.appendChild(option);
-                        });
-                        horaSelect.disabled = false;
+                        return;
                     }
+
+                    data.forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot.valor;
+                        option.textContent = slot.texto;
+                        horaSelect.appendChild(option);
+                    });
+                    horaSelect.disabled = false;
                 })
                 .catch(error => {
                     console.error('Error al cargar horarios:', error);

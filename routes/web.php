@@ -133,6 +133,9 @@ Route::middleware(['auth'])->group(function () {
     // Rutas exclusivas para el portal de clientes (Landing)
     Route::post('/client/appointments', [\App\Http\Controllers\LandingController::class, 'agendarCita'])->name('client.appointments.store');
     Route::post('/client/buy', [\App\Http\Controllers\LandingController::class, 'comprarProducto'])->name('client.products.buy');
-    Route::get('/client/available-hours', [\App\Http\Controllers\LandingController::class, 'getHorariosDisponibles'])->name('client.appointments.hours');
 });
+
+// Horarios disponibles para la fecha/servicio (puede ser consultado desde el modal de reserva)
+Route::get('/client/available-hours', [\App\Http\Controllers\LandingController::class, 'getHorariosDisponibles'])
+    ->name('client.appointments.hours');
 

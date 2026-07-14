@@ -12,5 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(RolePermissionSeeder::class);
+        $this->call(TestDataSeeder::class);
+        // Horarios necesarios para pruebas en el landing (estilistas y recepcionistas)
+        $this->call(HorariosSeeder::class);
     }
 }
