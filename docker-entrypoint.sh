@@ -5,7 +5,8 @@
 PORT=${PORT:-80}
 
 # Reemplazar el puerto en la configuración de Nginx
-sed -i "s/listen \${PORT:-80}/listen ${PORT}/g" /etc/nginx/nginx.conf
+# Usar / como delimitador en lugar de | para evitar conflictos
+sed -i "s/listen [0-9]*;/listen ${PORT};/" /etc/nginx/nginx.conf
 
 # Limpiar y cachear configuraciones de Laravel (Mejora de rendimiento en Producción)
 php artisan config:cache
