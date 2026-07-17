@@ -5,7 +5,6 @@
   },
   "deploy": {
     "numReplicas": 1,
-    "startCommand": "heroku-php-nginx public/",
     "healthchecks": {
       "readiness": {
         "path": "/",
