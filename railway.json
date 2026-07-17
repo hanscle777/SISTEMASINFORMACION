@@ -5,10 +5,12 @@
   },
   "deploy": {
     "numReplicas": 1,
+    "restartPolicyMaxRetries": 10,
     "healthchecks": {
       "readiness": {
         "path": "/",
-        "initialDelaySeconds": 30
+        "initialDelaySeconds": 30,
+        "periodSeconds": 10
       }
     }
   }
