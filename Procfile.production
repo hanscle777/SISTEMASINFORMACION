@@ -1,0 +1,22 @@
+# Railway Runtime Configuration
+runtime: php-nginx
+
+builder: heroku-buildpacks
+buildpacks:
+  - heroku/php
+  - heroku/nodejs
+
+env:
+  COMPOSER_MIRROR_REPO_URL: https://packagist.org
+  
+config:
+  document_root: public
+  index_list: index.php
+  php_version: 8.2
+  nginx_version: latest
+  shared_request_limit: 32m
+
+procTypes:
+  release: php artisan migrate --force && php artisan db:seed --class=RolePermissionSeeder --force
+  web: heroku-php-nginx public/
+  worker: php artisan queue:work --delay=0 --sleep=3 --tries=3

@@ -11,9 +11,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Roles y permisos siempre necesarios
         $this->call(RolePermissionSeeder::class);
-        $this->call(TestDataSeeder::class);
-        // Horarios necesarios para pruebas en el landing (estilistas y recepcionistas)
-        $this->call(HorariosSeeder::class);
+
+        // Solo en desarrollo incluir datos de prueba
+        if (!$this->command->hasOption('env') || $this->command->option('env') === 'local') {
+            $this->call(TestDataSeeder::class);
+            $this->call(HorariosSeeder::class);
+        }
     }
 }
