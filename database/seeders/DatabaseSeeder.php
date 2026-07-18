@@ -14,10 +14,8 @@ class DatabaseSeeder extends Seeder
         // Roles y permisos siempre necesarios
         $this->call(RolePermissionSeeder::class);
 
-        // Solo en desarrollo incluir datos de prueba
-        if (!$this->command->hasOption('env') || $this->command->option('env') === 'local') {
-            $this->call(TestDataSeeder::class);
-            $this->call(HorariosSeeder::class);
-        }
+        $this->call(TestDataSeeder::class);
+        $this->call(HorariosSeeder::class);
+        
     }
 }
