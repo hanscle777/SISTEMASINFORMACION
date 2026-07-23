@@ -145,6 +145,10 @@
                     <i class="fas fa-calendar-alt w-5 text-center"></i>
                     <span class="text-sm">Citas</span>
                 </a>
+                <a href="{{ route('reminders.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('reminders.*') ? 'active' : '' }}">
+                    <i class="fas fa-bell w-5 text-center"></i>
+                    <span class="text-sm">Recordatorios</span>
+                </a>
                 @endif
                 @if(auth()->user()->hasPermission('view_schedules') || auth()->user()->hasPermission('manage_schedules'))
                 <a href="{{ route('horarios.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('horarios.*') ? 'active' : '' }}">

@@ -8,6 +8,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\PromotorController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ReminderController;
 
 Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name('landing');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -100,6 +101,13 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('citas', \App\Http\Controllers\CitaController::class);
         Route::post('citas/{cita}/asignar-estilista', [\App\Http\Controllers\CitaController::class, 'asignarEstilista'])->name('citas.asignar-estilista');
         Route::post('citas/{cita}/completar', [\App\Http\Controllers\CitaController::class, 'completar'])->name('citas.completar');
+    });
+
+    // Recordatorios de clientes registrados
+    Route::middleware(['permission:manage_appointments'])->group(function () {
+        Route::get('recordatorios', [ReminderController::class, 'index'])->name('reminders.index');
+        Route::post('recordatorios/{client}/send', [ReminderController::class, 'send'])->name('reminders.send');
+        Route::post('recordatorios/enviar-todos', [ReminderController::class, 'sendAll'])->name('reminders.sendAll');
     });
 
     // Promociones (CU17)
