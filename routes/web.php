@@ -76,6 +76,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:manage_inventory'])->group(function () {
         Route::resource('promotores', PromotorController::class);
         Route::resource('productos', ProductoController::class)->except(['index']);
+        Route::resource('compras', \App\Http\Controllers\CompraController::class);
     });
 
     // Horarios (CU7 y CU8)

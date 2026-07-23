@@ -121,6 +121,10 @@
                     <i class="fas fa-box-open w-5 text-center"></i>
                     <span class="text-sm">Productos</span>
                 </a>
+                <a href="{{ route('compras.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('compras.*') ? 'active' : '' }}">
+                    <i class="fas fa-shopping-cart w-5 text-center"></i>
+                    <span class="text-sm">Compras</span>
+                </a>
                 <a href="{{ route('promotores.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('promotores.*') ? 'active' : '' }}">
                     <i class="fas fa-truck w-5 text-center"></i>
                     <span class="text-sm">Proveedores</span>
