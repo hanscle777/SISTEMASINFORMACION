@@ -114,6 +114,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('ganancias', [\App\Http\Controllers\GananciaController::class, 'index'])->name('ganancias.index');
     });
 
+    // Reportes
+    Route::middleware(['permission:view_reports'])->group(function () {
+        Route::get('reportes', [\App\Http\Controllers\ReportesController::class, 'index'])->name('reportes.index');
+        Route::get('reportes/ventas', [\App\Http\Controllers\ReportesController::class, 'ventas'])->name('reportes.ventas');
+        Route::get('reportes/ganancias', [\App\Http\Controllers\ReportesController::class, 'ganancias'])->name('reportes.ganancias');
+        Route::get('reportes/stock', [\App\Http\Controllers\ReportesController::class, 'stock'])->name('reportes.stock');
+    });
+
     // Rutas públicas de Stripe y Tickets para clientes (bajo middleware auth)
     Route::get('ventas/{venta}/stripe-success', [\App\Http\Controllers\VentaController::class, 'stripeSuccess'])->name('ventas.stripe.success');
     Route::get('ventas/{venta}/stripe-cancel', [\App\Http\Controllers\VentaController::class, 'stripeCancel'])->name('ventas.stripe.cancel');
