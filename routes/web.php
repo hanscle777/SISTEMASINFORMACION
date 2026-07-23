@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['permission:manage_sales'])->group(function () {
         Route::resource('ventas', \App\Http\Controllers\VentaController::class);
         Route::post('ventas/{venta}/update-status', [\App\Http\Controllers\VentaController::class, 'updateStatus'])->name('ventas.update-status');
+        Route::get('ganancias', [\App\Http\Controllers\GananciaController::class, 'index'])->name('ganancias.index');
     });
 
     // Rutas públicas de Stripe y Tickets para clientes (bajo middleware auth)

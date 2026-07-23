@@ -162,6 +162,10 @@
                     <i class="fas fa-cash-register w-5 text-center"></i>
                     <span class="text-sm">Ventas</span>
                 </a>
+                <a href="{{ route('ganancias.index') }}" class="nav-link flex items-center space-x-3 p-3 {{ request()->routeIs('ganancias.*') ? 'active' : '' }}">
+                    <i class="fas fa-chart-line w-5 text-center"></i>
+                    <span class="text-sm">Ganancias</span>
+                </a>
                 @endif
 
                 @if(auth()->user()->hasPermission('manage_promotions'))
